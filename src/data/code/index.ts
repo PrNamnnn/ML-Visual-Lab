@@ -8,12 +8,14 @@ import { machineLearningCode, modelEvaluationCode } from "./machine-learning";
 import { deepLearningCode } from "./deep-learning";
 import { computerVisionCode, nlpCode, transformersCode } from "./vision-language";
 import { aiEngineeringCode } from "./ai-engineering";
+import { mltCode } from "./mlt";
+import { linearAlgebraExtraCode, calculusExtraCode, statisticsExtraCode, optimizationExtraCode } from "./math-extra";
 
 const byModule: Record<string, Record<string, CodeExample>> = {
-  "linear-algebra": linearAlgebraCode,
-  calculus: calculusCode,
-  statistics: statisticsCode,
-  optimization: optimizationCode,
+  "linear-algebra": { ...linearAlgebraCode, ...mltCode, ...linearAlgebraExtraCode },
+  calculus: { ...calculusCode, ...calculusExtraCode },
+  statistics: { ...statisticsCode, ...statisticsExtraCode },
+  optimization: { ...optimizationCode, ...optimizationExtraCode },
   preprocessing: preprocessingCode,
   "feature-engineering": featureEngineeringCode,
   "machine-learning": machineLearningCode,

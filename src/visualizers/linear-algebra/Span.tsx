@@ -163,7 +163,7 @@ function SubspaceViz() {
         { label: "\\mathbf 0\\in S", tex: true, value: subspace ? "yes" : "no", color: subspace ? C.green : C.red },
         { label: "\\mathbf p+\\mathbf q\\in S", tex: true, value: inS(sum) ? "yes" : `no (off by ${fmt(Math.abs(dist(sum)))})`, color: inS(sum) ? C.green : C.red },
         { label: "k\\mathbf p\\in S", tex: true, value: inS(kp) ? "yes" : `no (off by ${fmt(Math.abs(dist(kp)))})`, color: inS(kp) ? C.green : C.red },
-        { label: "\dim S", tex: true, value: subspace ? 1 : "— (affine line)" },
+        { label: "\\dim S", tex: true, value: subspace ? 1 : "— (affine line)" },
       ]} />}
       calc={<CalcSteps steps={[
         { tex: String.raw`S=\{t\,\mathbf d+${tex(c, 2)}\,\mathbf n\},\quad \mathbf d=(${tex(d[0])},${tex(d[1])})` },

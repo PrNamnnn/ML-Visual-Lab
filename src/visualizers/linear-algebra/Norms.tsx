@@ -62,7 +62,7 @@ export default function Norms({ mode = "unitball" }: { mode?: "unitball" | "dist
         ]} />}
         calc={<CalcSteps steps={[
           { tex: `\\|\\mathbf x\\|_1=|${tex(x[0], 2)}|+|${tex(x[1], 2)}|=${tex(norm1(x))}` },
-          { tex: `\\|\\mathbf x\\|_2=\\sqrt{${tex(x[0], 2)}^2+${tex(x[1], 2)}^2}=${tex(norm2(x))}` },
+          { tex: `\\|\\mathbf x\\|_2=\\sqrt{(${tex(x[0], 2)})^2+(${tex(x[1], 2)})^2}=${tex(norm2(x))}` },
           { tex: `\\|\\mathbf x\\|_\\infty=\\max(|${tex(x[0], 2)}|,|${tex(x[1], 2)}|)=${tex(normInf(x))}` },
         ]} />}
       />
@@ -100,7 +100,7 @@ export default function Norms({ mode = "unitball" }: { mode?: "unitball" | "dist
       ]} />}
       calc={<CalcSteps steps={[
         { tex: `|\\Delta x|=${tex(dx, 2)},\\quad|\\Delta y|=${tex(dy, 2)}` },
-        { tex: `d_1=${tex(dx, 2)}+${tex(dy, 2)}=${tex(d1)},\\quad d_2=\\sqrt{${tex(dx, 2)}^2+${tex(dy, 2)}^2}=${tex(d2)},\\quad d_\\infty=${tex(di)}` },
+        { tex: `d_1=${tex(dx, 2)}+${tex(dy, 2)}=${tex(d1)},\\quad d_2=\\sqrt{(${tex(dx, 2)})^2+(${tex(dy, 2)})^2}=${tex(d2)},\\quad d_\\infty=${tex(di)}` },
       ]} />}
     />
   );

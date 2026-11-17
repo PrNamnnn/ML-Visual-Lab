@@ -23,6 +23,8 @@ export function Sidebar({ onSearch, forceExpanded = false }: { onSearch: () => v
   const collapsed = forceExpanded ? false : storeCollapsed;
   const activeModule = pathname.split("/")[1];
   const [open, setOpen] = useState<Record<string, boolean>>({});
+  /** per-section open state for long modules; undefined = "open only if it holds the current page" */
+  const [openSec, setOpenSec] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (activeModule) setOpen((o) => ({ ...o, [activeModule]: true }));
@@ -113,31 +115,52 @@ export function Sidebar({ onSearch, forceExpanded = false }: { onSearch: () => v
                     </div>
                     {isOpen && (
                       <div className="mb-1.5 ml-[19px] border-l border-line pl-2.5">
-                        {m.sections.map((s) => (
-                          <div key={s.title} className="py-0.5">
-                            {m.sections.length > 1 && <div className="truncate px-2 pb-0.5 pt-1.5 text-[11px] text-faint">{s.title}</div>}
-                            {s.topics.map((k) => {
-                              const t = byKey.get(k);
-                              if (!t) return null;
-                              const active = pathname === t.href;
-                              return (
-                                <Link
-                                  key={k}
-                                  href={t.href}
-                                  aria-current={active ? "page" : undefined}
-                                  className={cn(
-                                    "flex items-center gap-2 rounded-md px-2 py-[5px] text-[12.5px] leading-tight transition-colors duration-150",
-                                    active ? "bg-hover font-medium text-fg" : "text-muted hover:bg-raised hover:text-fg",
-                                    t.status === "planned" && !active && "text-faint",
-                                  )}
+                        {m.sections.map((s, si) => {
+                          const collapsible = m.sections.length > 6;
+                          const hasActive = s.topics.some((k) => byKey.get(k)?.href === pathname);
+                          const secKey = `${m.id}/${s.id}`;
+                          const secOpen = !collapsible || (openSec[secKey] ?? hasActive);
+                          const partTitle = s.part && s.part !== m.sections[si - 1]?.part ? m.parts?.find((p) => p.id === s.part)?.title : undefined;
+                          return (
+                            <div key={s.id} className="py-0.5">
+                              {partTitle && <div className="label px-2 pb-1 pt-3 first:pt-1">{partTitle}</div>}
+                              {m.sections.length > 1 && (collapsible ? (
+                                <button
+                                  className={cn("flex w-full items-center gap-1 rounded px-1 py-[5px] text-left text-[12px] hover:bg-raised hover:text-fg", hasActive ? "text-fg" : "text-muted")}
+                                  onClick={() => setOpenSec((o) => ({ ...o, [secKey]: !secOpen }))}
+                                  aria-expanded={secOpen}
                                 >
-                                  <span className={cn("h-1 w-1 shrink-0 rounded-full", active ? "bg-accent" : t.status === "complete" ? "bg-line-strong" : "bg-transparent ring-1 ring-line-strong")} />
-                                  <span className="truncate">{t.title}</span>
-                                </Link>
-                              );
-                            })}
-                          </div>
-                        ))}
+                                  <ChevronRight size={11} className={cn("shrink-0 text-faint transition-transform", secOpen && "rotate-90")} />
+                                  <span className="truncate">{s.week ? <><span className="num text-faint">W{s.week}</span> {s.title}</> : s.title}</span>
+                                  <span className="num ml-auto pl-1 text-[10.5px] text-faint">{s.topics.length}</span>
+                                </button>
+                              ) : (
+                                <div className="truncate px-2 pb-0.5 pt-1.5 text-[11.5px] text-faint">{s.title}</div>
+                              ))}
+                              {secOpen && s.topics.map((k) => {
+                                const t = byKey.get(k);
+                                if (!t) return null;
+                                const active = pathname === t.href;
+                                return (
+                                  <Link
+                                    key={k}
+                                    href={t.href}
+                                    aria-current={active ? "page" : undefined}
+                                    className={cn(
+                                      "flex items-center gap-2 rounded-md px-2 py-[5px] text-[12.5px] leading-snug transition-colors duration-150",
+                                      collapsible && "ml-2",
+                                      active ? "bg-hover font-medium text-fg" : "text-muted hover:bg-raised hover:text-fg",
+                                      t.status === "planned" && !active && "text-faint",
+                                    )}
+                                  >
+                                    <span className={cn("h-1 w-1 shrink-0 rounded-full", active ? "bg-accent" : t.status === "complete" ? "bg-line-strong" : "bg-transparent ring-1 ring-line-strong")} />
+                                    <span className="truncate">{t.title}</span>
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>

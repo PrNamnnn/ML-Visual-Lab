@@ -4,8 +4,10 @@ import path from "node:path";
 import katex from "katex";
 import { tex, texMatrix } from "@/lib/utilities/format";
 
-const CMDS = "begin|end|frac|dfrac|tfrac|times|text|mathbf|sum|int|sqrt|cdot|left|right|alpha|beta|lambda|sigma|theta|nabla|partial|hat|bar|quad|operatorname|infty|top|mathbb|boldsymbol|odot|det|exp|log|ln|sin|cos|max|min|arg|prod|lim|neq|approx|pm|mu|varphi|epsilon|eta|kappa|rho|tau|omega|Sigma|Phi|delta|gamma|underbrace|xrightarrow|mathcal|tilde|lfloor|rfloor|lceil|rceil|langle|rangle|Rightarrow|iff|forall|mathrel|textstyle|bmatrix|pmatrix|perp|parallel|succeq|bmod|lVert|rVert|checkmark|texttt";
-const BAD = new RegExp(String.raw`(^|[^\\])\\(${CMDS})\b`);
+const CMDS = "begin|end|frac|dfrac|tfrac|times|text|mathbf|sum|int|sqrt|cdot|left|right|alpha|beta|lambda|sigma|theta|nabla|partial|hat|bar|quad|operatorname|infty|top|mathbb|boldsymbol|odot|det|exp|log|ln|sin|cos|max|min|arg|prod|lim|neq|approx|pm|mu|varphi|epsilon|eta|kappa|rho|tau|omega|Sigma|Phi|delta|gamma|underbrace|xrightarrow|mathcal|tilde|lfloor|rfloor|lceil|rceil|langle|rangle|Rightarrow|iff|forall|mathrel|textstyle|bmatrix|pmatrix|perp|parallel|succeq|bmod|lVert|rVert|checkmark|texttt|le|ge|nu|xi|pi|phi|psi|chi|zeta|binom|big|Big|ell|vdots|cdots|ldots|varepsilon|mathrm|mid|propto|sim|leq|geq|ne|cup|cap|subset|setminus|circ|overline|vec|widehat|overset|underset|qquad|Delta|Gamma|Lambda|Omega|Theta|Pi|Psi|rightarrow|leftarrow|mapsto|exists|varnothing|rank|dim|ker|sup|inf|Pr";
+// A command name must not be followed by another letter. (A plain \b word boundary would let "\theta_W"
+// and "\dim S"-style strings through, because "_" and digits count as word characters.)
+const BAD = new RegExp(String.raw`(^|[^\\])\\(${CMDS})(?![a-zA-Z])`);
 
 function walk(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
@@ -20,7 +22,10 @@ describe("TeX escaping in source", () => {
     for (const f of walk(path.resolve(__dirname, "../src"))) {
       fs.readFileSync(f, "utf8").split("\n").forEach((line, i) => {
         if (line.includes("String.raw")) return;
-        if (BAD.test(line)) offenders.push(`${path.relative(process.cwd(), f)}:${i + 1}: ${line.trim().slice(0, 100)}`);
+        // `r` is the String.raw alias used by the data files (const r = String.raw): drop those raw
+        // templates and check what is left of the line, so ordinary strings beside them stay guarded
+        const rest = line.replace(/\br`[^`]*`/g, "");
+        if (BAD.test(rest)) offenders.push(`${path.relative(process.cwd(), f)}:${i + 1}: ${line.trim().slice(0, 100)}`);
       });
     }
     expect(offenders).toEqual([]);
