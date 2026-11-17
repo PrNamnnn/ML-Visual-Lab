@@ -1,6 +1,23 @@
-node_modules
-.next
-out
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Build
 *.tsbuildinfo
 next-env.d.ts
+
+# Claude
 .claude/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*

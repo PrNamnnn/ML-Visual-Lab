@@ -66,8 +66,8 @@ export default function BayesUpdate() {
       }
       readouts={<Readouts items={[
         { label: "k/n", tex: true, value: `${k} / ${n}` },
-        { label: "\\hat p_{\\text{MLE}}", tex: true, value: fmt(mle) },
-        { label: "\\hat p_{\\text{MAP}}", tex: true, value: fmt(map) },
+        { label: "\\hat p_{\\text{MLE}}", tex: true, value: n ? fmt(mle) : "— (no data yet)" },
+        { label: "\\hat p_{\\text{MAP}}", tex: true, value: Number.isFinite(map) ? fmt(map) : "— (no interior mode)" },
         { label: "E[p\\mid\\text{data}]", tex: true, value: fmt(mean), color: C.pink },
         { label: "95\\%\\ \\text{CrI}", tex: true, value: `[${fmt(ci[0])}, ${fmt(ci[1])}]` },
       ]} />}

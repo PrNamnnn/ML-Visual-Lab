@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { ArrowUpRight, ChevronRight, Info } from "lucide-react";
-import type { Topic } from "@/types/curriculum";
+import { ArrowLeft, ArrowRight, ArrowUpRight, ChevronRight, Info } from "lucide-react";
+import type { Topic, WorkedStep } from "@/types/curriculum";
 import { Tex } from "@/components/mathematics/Tex";
-import { topicByKey, topics } from "@/data/curriculum";
+import { neighbours, sectionOf, topicByKey, topics } from "@/data/curriculum";
 import { TopicActions } from "./TopicActions";
 import { VisualSlot } from "@/visualizers/VisualSlot";
 import { CodeTabs } from "./CodeTabs";
@@ -10,13 +10,13 @@ import { highlight } from "@/lib/utilities/highlight";
 
 const diffLabel = { beginner: "Beginner", intermediate: "Intermediate", advanced: "Advanced" } as const;
 
-function Section({ id, letter, title, children }: { id: string; letter: string; title: string; children: React.ReactNode }) {
+function Section({ id, title, children, aside }: { id: string; title: string; children: React.ReactNode; aside?: React.ReactNode }) {
   return (
-    <section id={id} aria-labelledby={`${id}-h`} className="scroll-mt-16">
-      <h2 id={`${id}-h`} className="mb-3 flex items-baseline gap-2.5 text-[15px] font-semibold tracking-tight">
-        <span className="num text-[11px] font-medium text-faint">{letter}</span>
-        {title}
-      </h2>
+    <section id={id} aria-labelledby={`${id}-h`} className="scroll-mt-20">
+      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-line pb-2">
+        <h2 id={`${id}-h`} className="text-[17px] font-semibold tracking-tight">{title}</h2>
+        {aside && <div className="text-[12px] text-faint">{aside}</div>}
+      </div>
       {children}
     </section>
   );
@@ -26,10 +26,10 @@ function TopicLink({ k }: { k: string }) {
   const t = topicByKey(k);
   if (!t) return null;
   return (
-    <Link href={t.href} className="group flex items-center justify-between gap-3 rounded-md border border-line px-3 py-2 hover:border-line-strong hover:bg-raised/50">
+    <Link href={t.href} className="group flex min-w-0 items-center justify-between gap-3 rounded-md border border-line px-3 py-2 hover:border-line-strong hover:bg-raised/50">
       <div className="min-w-0">
-        <div className="truncate text-[13px] text-fg">{t.title}</div>
-        <div className="truncate text-[11.5px] text-faint">{t.moduleTitle}{t.status === "planned" ? " · planned" : ""}</div>
+        <div className="truncate text-[13.5px] text-fg">{t.title}</div>
+        <div className="truncate text-[12px] text-faint">{t.week ? `${t.moduleTitle} · MLT Week ${t.week}` : t.moduleTitle}{t.status === "planned" ? " · planned" : ""}</div>
       </div>
       <ArrowUpRight size={14} className="shrink-0 text-faint group-hover:text-fg" />
     </Link>
@@ -38,10 +38,48 @@ function TopicLink({ k }: { k: string }) {
 
 export function Breadcrumb({ topic }: { topic: Topic }) {
   return (
-    <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 text-[12px] text-faint">
+    <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 text-[12.5px] text-faint">
       <Link href={`/${topic.module}`} className="hover:text-fg">{topic.moduleTitle}</Link>
       <ChevronRight size={12} />
-      <span>{topic.section}</span>
+      <Link href={`/${topic.module}#${topic.sectionId}`} className="hover:text-fg">{topic.section}</Link>
+    </nav>
+  );
+}
+
+/** Numbered sequence of equations with a short remark per step (derivations and worked examples). */
+function Steps({ steps }: { steps: WorkedStep[] }) {
+  return (
+    <ol className="steps">
+      {steps.map((s, i) => (
+        <li key={i}>
+          <span className="num step-n" aria-hidden>{i + 1}</span>
+          <div className="min-w-0">
+            <div className="math-scroll"><Tex tex={s.tex} block /></div>
+            {s.note && <p className="mt-1 text-[13px] leading-relaxed text-muted">{s.note}</p>}
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function PrevNext({ topic }: { topic: Topic }) {
+  const { prev, next } = neighbours(topic.key);
+  if (!prev && !next) return null;
+  const card = (t: Topic, dir: "prev" | "next") => (
+    <Link href={t.href} rel={dir} className={`group flex min-w-0 flex-1 items-center gap-3 rounded-lg border border-line px-4 py-3 hover:border-line-strong hover:bg-raised/50 ${dir === "next" ? "justify-end text-right" : ""}`}>
+      {dir === "prev" && <ArrowLeft size={15} className="shrink-0 text-faint group-hover:text-fg" />}
+      <div className="min-w-0">
+        <div className="label">{dir === "prev" ? "Previous" : "Next"}{t.sectionId !== topic.sectionId ? ` · ${t.section}` : ""}</div>
+        <div className="mt-0.5 truncate text-[14px] text-fg">{t.title}</div>
+      </div>
+      {dir === "next" && <ArrowRight size={15} className="shrink-0 text-faint group-hover:text-fg" />}
+    </Link>
+  );
+  return (
+    <nav aria-label="Lesson sequence" className="flex flex-col gap-2 sm:flex-row">
+      {prev ? card(prev, "prev") : <span className="hidden flex-1 sm:block" />}
+      {next ? card(next, "next") : <span className="hidden flex-1 sm:block" />}
     </nav>
   );
 }
@@ -75,27 +113,41 @@ export function TopicView({ topic }: { topic: Topic }) {
   }
 
   const related = [...new Set([...(topic.related ?? []), ...sameSection.filter((t) => t.status === "complete").slice(0, 3).map((t) => t.key)])].filter((k) => topicByKey(k));
+  const section = sectionOf(topic);
+  const covers = section?.syllabus?.filter((s) => s.slug === topic.slug).map((s) => s.item) ?? [];
+  const notes: [string, string[] | undefined][] = [["Assumptions", c.assumptions], ["Special cases", c.specialCases], ["Limitations", c.limitations]];
+  const shownNotes = notes.filter(([, l]) => l?.length);
 
   return (
     <article className="mx-auto max-w-[1180px] px-4 py-6 sm:px-6 lg:py-8">
-      {/* A. Concept introduction */}
       <header className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="min-w-0">
           <Breadcrumb topic={topic} />
-          <h1 className="mt-2 text-[26px] font-semibold leading-tight tracking-tight sm:text-[28px]">{topic.title}</h1>
-          <p className="mt-3 max-w-[68ch] text-[15px] leading-relaxed text-fg/90">{c.definition}</p>
-          <p className="mt-2 max-w-[68ch] text-[14px] leading-relaxed text-muted"><span className="text-fg/80">Why it exists. </span>{c.why}</p>
-          <div className="mt-4"><TopicActions topicKey={topic.key} /></div>
+          <h1 className="mt-2 text-[26px] font-semibold leading-tight tracking-tight sm:text-[30px]">{topic.title}</h1>
+          <div className="prose-lesson mt-4">
+            {c.intuition && <p><span className="lead-in">Intuition. </span>{c.intuition}</p>}
+            <p className={c.intuition ? undefined : "text-fg/90"}>{c.intuition && <span className="lead-in">Definition. </span>}{c.definition}</p>
+            <p><span className="lead-in">Why it matters. </span>{c.why}</p>
+          </div>
+          <div className="mt-5"><TopicActions topicKey={topic.key} /></div>
         </div>
-        <aside className="space-y-4 rounded-lg border border-line p-4 text-[13px]">
+        <aside className="space-y-4 self-start rounded-lg border border-line p-4 text-[13px]">
           <div className="flex flex-wrap gap-1.5">
             <span className="chip">{diffLabel[topic.difficulty]}</span>
-            <span className="chip">{topic.moduleTitle}</span>
+            <span className="chip">{topic.week ? `MLT Week ${topic.week}` : topic.moduleTitle}</span>
           </div>
+          {covers.length > 0 && (
+            <div>
+              <div className="label mb-1.5">Syllabus items covered</div>
+              <ul className="space-y-1 text-muted">
+                {covers.map((u) => <li key={u} className="flex gap-2"><span className="mt-[8px] h-1 w-1 shrink-0 rounded-full bg-faint" />{u}</li>)}
+              </ul>
+            </div>
+          )}
           <div>
             <div className="label mb-1.5">Used in AI/ML</div>
             <ul className="space-y-1 text-muted">
-              {c.usedIn.map((u) => <li key={u} className="flex gap-2"><span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-faint" />{u}</li>)}
+              {c.usedIn.map((u) => <li key={u} className="flex gap-2"><span className="mt-[8px] h-1 w-1 shrink-0 rounded-full bg-faint" />{u}</li>)}
             </ul>
           </div>
           {topic.prerequisites?.length ? (
@@ -112,27 +164,26 @@ export function TopicView({ topic }: { topic: Topic }) {
         </aside>
       </header>
 
-      <div className="mt-8 space-y-10">
-        {/* B + D. Visual intuition & interactive experiment */}
-        <Section id="visual" letter="B · D" title="Visual intuition and experiment">
+      <div className="mt-10 space-y-12">
+        <Section id="visual" title="Interactive experiment">
           <VisualSlot key={topic.key} id={c.visual.id} props={c.visual.props} />
-          {c.visual.caption && <p className="mt-2 text-[12.5px] text-faint">{c.visual.caption}</p>}
+          {c.visual.caption && <p className="mt-2.5 max-w-[80ch] text-[13px] leading-relaxed text-muted">{c.visual.caption}</p>}
         </Section>
 
-        {/* C. Mathematical formulation */}
-        <Section id="math" letter="C" title="Mathematical formulation">
+        <Section id="math" title="Mathematical formulation">
+          {c.notation && <p className="mb-4 max-w-[80ch] rounded-md border border-line bg-raised/40 px-3.5 py-2.5 text-[13px] leading-relaxed text-muted"><span className="font-medium text-fg/90">Notation. </span>{c.notation}</p>}
           <div className="grid gap-3 md:grid-cols-2">
             {c.formulas.map((f) => (
               <div key={f.label} className="panel min-w-0 p-4">
                 <div className="label mb-2">{f.label}</div>
-                <div className="overflow-x-auto py-1"><Tex tex={f.tex} block /></div>
-                <p className="mt-2 text-[13px] leading-relaxed text-muted">{f.explanation}</p>
+                <div className="math-scroll py-1"><Tex tex={f.tex} block /></div>
+                <p className="mt-2.5 text-[13.5px] leading-relaxed text-muted">{f.explanation}</p>
                 {f.variables && (
-                  <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[12.5px]">
+                  <dl className="mt-3 grid grid-cols-[auto_1fr] items-baseline gap-x-3 gap-y-1.5 border-t border-line pt-3 text-[13px]">
                     {f.variables.map((v) => (
                       <div key={v.symbol} className="contents">
-                        <dt><Tex tex={v.symbol} /></dt>
-                        <dd className="text-muted">{v.meaning}</dd>
+                        <dt className="text-fg/90"><Tex tex={v.symbol} /></dt>
+                        <dd className="leading-relaxed text-muted">{v.meaning}</dd>
                       </div>
                     ))}
                   </dl>
@@ -140,73 +191,70 @@ export function TopicView({ topic }: { topic: Topic }) {
               </div>
             ))}
           </div>
-          {(c.assumptions || c.specialCases || c.limitations) && (
-            <div className="mt-3 grid gap-3 md:grid-cols-3">
-              {[["Assumptions", c.assumptions], ["Special cases", c.specialCases], ["Limitations", c.limitations]].map(([title, list]) =>
-                list && (list as string[]).length ? (
-                  <div key={title as string} className="rounded-lg border border-line p-4">
-                    <div className="label mb-2">{title as string}</div>
-                    <ul className="space-y-1.5 text-[13px] leading-relaxed text-muted">
-                      {(list as string[]).map((a) => <li key={a}>{a}</li>)}
-                    </ul>
-                  </div>
-                ) : null,
-              )}
+          {shownNotes.length > 0 && (
+            <div className={`mt-3 grid gap-3 ${shownNotes.length > 1 ? "md:grid-cols-2" : ""} ${shownNotes.length > 2 ? "lg:grid-cols-3" : ""}`}>
+              {shownNotes.map(([title, list]) => (
+                <div key={title} className="rounded-lg border border-line p-4">
+                  <div className="label mb-2">{title}</div>
+                  <ul className="space-y-2 text-[13.5px] leading-relaxed text-muted">
+                    {list!.map((a) => <li key={a} className="flex gap-2"><span className="mt-[9px] h-1 w-1 shrink-0 rounded-full bg-faint" />{a}</li>)}
+                  </ul>
+                </div>
+              ))}
             </div>
           )}
         </Section>
 
-        {/* E. Worked example */}
-        {c.worked && (
-          <Section id="worked" letter="E" title={`Worked example — ${c.worked.title}`}>
-            <div className="panel p-4">
-              <ol className="space-y-2">
-                {c.worked.steps.map((s, i) => (
-                  <li key={i} className="flex min-w-0 items-baseline gap-3">
-                    <span className="num w-5 shrink-0 text-[11px] text-faint">{i + 1}</span>
-                    <div className="min-w-0 overflow-x-auto"><Tex tex={s.tex} /></div>
-                    {s.note && <span className="text-[12px] text-faint">{s.note}</span>}
-                  </li>
-                ))}
-              </ol>
-              {c.worked.result && (
-                <div className="mt-3 flex items-center gap-3 border-t border-line pt-3">
-                  <span className="label">Result</span>
-                  <Tex tex={c.worked.result} />
-                </div>
-              )}
-              <p className="mt-3 text-[11.5px] text-faint">Static example with fixed inputs. The interactive visualization above recomputes its values live.</p>
+        {c.derivation && (
+          <Section id="derivation" title={`Derivation — ${c.derivation.title}`}>
+            <div className="panel p-4 sm:p-5">
+              {c.derivation.setup && <p className="mb-4 max-w-[80ch] text-[13.5px] leading-relaxed text-muted">{c.derivation.setup}</p>}
+              <Steps steps={c.derivation.steps} />
+              {c.derivation.conclusion && <p className="mt-4 max-w-[80ch] border-t border-line pt-3 text-[13.5px] leading-relaxed text-fg/90">{c.derivation.conclusion}</p>}
             </div>
           </Section>
         )}
 
-        {/* H. Implementation */}
-        {c.code && (
-          <Section id="code" letter="H" title="Implementation in Python and Rust">
-            <CodeTabs python={{ html: highlight(c.code.python, "python"), raw: c.code.python }} rust={{ html: highlight(c.code.rust, "rust"), raw: c.code.rust }} output={c.code.output} explanation={c.code.explanation} />
+        {c.worked && (
+          <Section id="worked" title={`Worked example — ${c.worked.title}`} aside="Fixed inputs; the experiment above recomputes live.">
+            <div className="panel p-4 sm:p-5">
+              <Steps steps={c.worked.steps} />
+              {c.worked.result && (
+                <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-3">
+                  <span className="label">Result</span>
+                  <div className="math-scroll min-w-0"><Tex tex={c.worked.result} /></div>
+                </div>
+              )}
+            </div>
           </Section>
         )}
 
-        {/* F. AI/ML application */}
-        <Section id="apps" letter="F" title="Where it shows up in AI/ML">
+        {c.code && (
+          <Section id="code" title={c.code.rust ? "Implementation in Python and Rust" : "Implementation in Python"}>
+            <CodeTabs python={{ html: highlight(c.code.python, "python"), raw: c.code.python }} rust={c.code.rust ? { html: highlight(c.code.rust, "rust"), raw: c.code.rust } : undefined} output={c.code.output} explanation={c.code.explanation} />
+          </Section>
+        )}
+
+        <Section id="apps" title="Where it shows up in AI/ML">
           <div className="grid gap-3 md:grid-cols-2">
             {c.applications.map((a) => (
               <div key={a.title} className="rounded-lg border border-line p-4">
-                <div className="text-[13.5px] font-medium">{a.title}</div>
-                <p className="mt-1 text-[13px] leading-relaxed text-muted">{a.body}</p>
+                <div className="text-[14px] font-medium">{a.title}</div>
+                <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted">{a.body}</p>
               </div>
             ))}
           </div>
         </Section>
 
-        {/* G. Related */}
         {related.length > 0 && (
-          <Section id="related" letter="G" title="Related concepts">
+          <Section id="related" title="Related concepts">
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {related.map((k) => <TopicLink key={k} k={k} />)}
             </div>
           </Section>
         )}
+
+        <PrevNext topic={topic} />
       </div>
     </article>
   );

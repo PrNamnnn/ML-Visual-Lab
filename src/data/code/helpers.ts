@@ -11,3 +11,10 @@ export const ex = (python: string, rust: string, output: string, explanation: st
   output: dedent(output),
   explanation,
 });
+
+/** Python-only example (used by the IITM MLT week lessons); the program must print exactly `output`. */
+export const py = (python: string, output: string, explanation: string): CodeExample => ({
+  python: dedent(python),
+  output: dedent(output),
+  explanation,
+});

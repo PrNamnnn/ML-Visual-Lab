@@ -114,14 +114,72 @@ input[type="range"].slider::-moz-range-thumb {
   border: 2px solid rgb(var(--bg));
 }
 
+/* ---------- mathematics ---------- */
 .katex {
-  font-size: 1.05em;
+  font-size: 1.06em;
+  /* keep inline maths from changing the line height of the surrounding text */
+  line-height: 1.2;
 }
 .katex-display {
   margin: 0;
+  padding: 3px 0;
+}
+.katex-display > .katex {
+  font-size: 1.12em;
+  white-space: nowrap;
+}
+/* wide equations scroll inside their own box instead of widening the page */
+.math-scroll {
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 2px 0;
+  scrollbar-width: thin;
+  max-width: 100%;
+}
+.math-scroll:focus-visible {
+  outline-offset: 0;
+}
+
+/* ---------- long-form lesson text ---------- */
+.prose-lesson {
+  max-width: 70ch;
+}
+.prose-lesson p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: rgb(var(--muted));
+}
+.prose-lesson p + p {
+  margin-top: 0.7em;
+}
+.prose-lesson p:first-child {
+  color: rgb(var(--fg) / 0.92);
+}
+.lead-in {
+  font-weight: 500;
+  color: rgb(var(--fg) / 0.92);
+}
+
+/* numbered equation sequences (derivations, worked examples) */
+.steps {
+  display: grid;
+  gap: 0.9rem;
+}
+.steps > li {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr);
+  column-gap: 0.75rem;
+  align-items: baseline;
+}
+.steps .step-n {
+  font-size: 11px;
+  color: rgb(var(--faint));
+  text-align: right;
+}
+.steps .katex-display {
+  text-align: left;
+}
+.steps .katex-display > .katex {
+  text-align: left;
 }
 
 @media (prefers-reduced-motion: reduce) {

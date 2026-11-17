@@ -1,15 +1,23 @@
 import type { ModuleDef } from "@/types/curriculum";
+import { mltWeeks } from "./mlt";
+import { additionalLinearAlgebra } from "./math-extra";
 
 export const linearAlgebra: ModuleDef = {
   id: "linear-algebra",
   title: "Linear Algebra",
-  short: "Vectors, matrices, transformations and decompositions",
-  description: "The language of data and neural networks: vectors as points and directions, matrices as transformations, and decompositions that reveal structure.",
+  short: "Vectors, matrices, decompositions and the mathematics of ML techniques",
+  description: "The language of data and neural networks: vectors as points and directions, matrices as transformations, and decompositions that reveal structure — followed by the complete twelve-week IITM Machine Learning Techniques syllabus, taught with the same tools.",
   group: "foundations",
   difficulty: "beginner",
+  parts: [
+    { id: "foundations", title: "Linear Algebra Foundations", description: "Vectors, matrices, linear systems, eigenvalues and decompositions. Every later lesson builds on these." },
+    { id: "mlt", title: "IITM MLT — Weeks 1 to 12", description: "The Machine Learning Techniques course in its original weekly order: unsupervised learning (PCA, kernel PCA, k-means, estimation and EM), regression, and classification from nearest neighbours to support vector machines and neural networks. These are machine-learning topics in their own right; they sit here because each is worked out with the linear algebra, calculus and probability of the foundation modules." },
+    { id: "additional", title: "Additional Mathematics for Machine Learning", description: "Concepts added after auditing the mathematical curriculum for gaps." },
+  ],
   sections: [
     {
       id: "vectors",
+      part: "foundations",
       title: "Scalars, Vectors and Geometry",
       topics: [
         {
@@ -385,6 +393,7 @@ export const linearAlgebra: ModuleDef = {
     },
     {
       id: "matrices",
+      part: "foundations",
       title: "Matrices",
       topics: [
         {
@@ -646,6 +655,7 @@ export const linearAlgebra: ModuleDef = {
     },
     {
       id: "determinants",
+      part: "foundations",
       title: "Determinants and Matrix Inverses",
       topics: [
         {
@@ -821,6 +831,7 @@ export const linearAlgebra: ModuleDef = {
     },
     {
       id: "eigen",
+      part: "foundations",
       title: "Eigenvalues and Eigenvectors",
       topics: [
         {
@@ -930,6 +941,7 @@ export const linearAlgebra: ModuleDef = {
     },
     {
       id: "advanced",
+      part: "foundations",
       title: "Advanced Linear Algebra for ML",
       topics: [
         {
@@ -1038,5 +1050,7 @@ export const linearAlgebra: ModuleDef = {
         },
       ],
     },
+    ...mltWeeks,
+    additionalLinearAlgebra,
   ],
 };

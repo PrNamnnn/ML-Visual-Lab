@@ -12,6 +12,8 @@ import { topics } from "@/data/curriculum";
 const RUN = !!process.env.RUN_CODE;
 const norm = (s: string) => s.replace(/\r\n/g, "\n").replace(/\s+$/, "");
 const withCode = topics.filter((t) => t.content?.code);
+/** Rust is optional: the IITM MLT week lessons ship Python only. */
+const withRust = withCode.filter((t) => t.content!.code!.rust);
 /** Python outputs collected for the optional WRITE_ACTUAL dump (only used when both languages agree). */
 const pyOut: Record<string, string> = {};
 
@@ -37,7 +39,8 @@ describe.runIf(RUN)("code examples execute", () => {
   it("every Rust snippet compiles and prints its documented output", () => {
     // all snippets in one crate: each wrapped in its own module, main() runs them in turn
     const MARK = "@@SNIPPET@@";
-    const mods = withCode.map((t, i) => `mod s${i} {\n${t.content!.code!.rust.replace(/^fn main\(\)/m, "pub fn main()")}\n}`).join("\n\n");
+    const withCode = withRust;
+    const mods = withCode.map((t, i) => `mod s${i} {\n${t.content!.code!.rust!.replace(/^fn main\(\)/m, "pub fn main()")}\n}`).join("\n\n");
     const main = `fn main() {\n${withCode.map((_, i) => `    println!("${MARK}${i}");\n    s${i}::main();`).join("\n")}\n}`;
     const src = path.join(dir, "all.rs");
     fs.writeFileSync(src, `#![allow(warnings)]\n${mods}\n\n${main}\n`);
@@ -64,7 +67,8 @@ describe.runIf(RUN)("code examples execute", () => {
 
 describe("code example coverage", () => {
   it("lists coverage", () => {
-    console.log(`code examples: ${withCode.length} / ${topics.filter((t) => t.content).length} complete topics`);
-    expect(withCode.length).toBeGreaterThanOrEqual(0);
+    const complete = topics.filter((t) => t.content);
+    console.log(`code examples: ${withCode.length} / ${complete.length} complete topics (${withRust.length} also in Rust)`);
+    expect(complete.filter((t) => !t.content!.code).map((t) => t.key)).toEqual([]);
   });
 });

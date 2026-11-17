@@ -19,6 +19,11 @@ export const visualizerIds = [
   "feature-hierarchy", "detection", "segmentation", "vit", "image-embed",
   "text-prep", "vocabulary", "word2vec", "glove", "beam-search", "fine-tune", "distillation",
   "data-validation", "feature-store", "pipelines", "versioning", "experiments", "eval-pipeline", "serving", "vector-db", "hybrid-search", "prompting", "tool-calling", "llm-eval", "context-window",
+  // IITM MLT week lessons (Linear Algebra module) and the additional-mathematics topics
+  "mlt-pca", "mlt-kernel", "mlt-kmeans", "mlt-estimation", "mlt-mixture", "mlt-linreg", "mlt-kernel-regression", "mlt-regularization", "mlt-cv",
+  "mlt-linear-classifier", "mlt-stump", "mlt-generative", "mlt-naive-bayes", "mlt-perceptron", "mlt-logistic", "mlt-svm", "mlt-bagging", "mlt-adaboost",
+  "mlt-surrogates", "mlt-forward",
+  "subspaces", "subspace-projection", "spectral-decomp", "pinv", "matrix-calculus", "joint-marginal", "convex-sets",
 ] as const;
 
 export type VisualizerId = (typeof visualizerIds)[number];

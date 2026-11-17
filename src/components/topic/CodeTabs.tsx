@@ -5,10 +5,10 @@ import { cn } from "@/lib/utilities/format";
 
 interface Lang { id: "python" | "rust"; label: string; html: string; raw: string; file: string }
 
-export function CodeTabs({ python, rust, output, explanation }: { python: { html: string; raw: string }; rust: { html: string; raw: string }; output: string; explanation: string }) {
+export function CodeTabs({ python, rust, output, explanation }: { python: { html: string; raw: string }; rust?: { html: string; raw: string }; output: string; explanation: string }) {
   const langs: Lang[] = [
     { id: "python", label: "Python", file: "main.py", ...python },
-    { id: "rust", label: "Rust", file: "main.rs", ...rust },
+    ...(rust ? [{ id: "rust" as const, label: "Rust", file: "main.rs", ...rust }] : []),
   ];
   const [active, setActive] = useState<Lang["id"]>("python");
   const [copied, setCopied] = useState(false);
@@ -50,14 +50,14 @@ export function CodeTabs({ python, rust, output, explanation }: { python: { html
             {copied ? "Copied" : "Copy"}
           </button>
         </div>
-        <pre className="max-h-[460px] overflow-auto p-4 font-mono text-[12.5px] leading-[1.65]" role="tabpanel"><code dangerouslySetInnerHTML={{ __html: cur.html }} /></pre>
+        <pre className="max-h-[520px] overflow-auto p-4 font-mono text-[12.5px] leading-[1.7]" role="tabpanel" tabIndex={0}><code dangerouslySetInnerHTML={{ __html: cur.html }} /></pre>
       </div>
       <div className="min-w-0 space-y-3">
         <div className="panel overflow-hidden">
-          <div className="flex items-center gap-2 border-b border-line px-3 py-2 text-[11.5px] text-faint"><Terminal size={13} /> Output (both programs)</div>
+          <div className="flex items-center gap-2 border-b border-line px-3 py-2 text-[11.5px] text-faint"><Terminal size={13} /> {langs.length > 1 ? "Output (both programs)" : "Output"}</div>
           <pre className="overflow-x-auto p-3 font-mono text-[12.5px] leading-relaxed text-fg">{output}</pre>
         </div>
-        <p className="text-[13px] leading-relaxed text-muted">{explanation}</p>
+        <p className="text-[13.5px] leading-relaxed text-muted">{explanation}</p>
       </div>
     </div>
   );
