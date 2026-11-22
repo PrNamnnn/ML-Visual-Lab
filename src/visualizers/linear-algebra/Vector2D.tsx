@@ -152,7 +152,7 @@ export default function Vector2D({ mode: initial = "dot", lab = false }: { mode?
       );
       readouts = [{ label: "\\|\\mathbf v\\|", tex: true, value: fmt(nu) }, { label: "\\hat{\\mathbf v}", tex: true, value: uh ? `(${fmt(uh[0])}, ${fmt(uh[1])})` : "undefined (v = 0)", color: C.pink }, { label: "\\|\\hat{\\mathbf v}\\|", tex: true, value: uh ? fmt(norm2(uh)) : "—" }];
       steps = [
-        { tex: `\\|\\mathbf v\\|=\\sqrt{${tex(u[0], 1)}^2+${tex(u[1], 1)}^2}=\\sqrt{${tex(u[0] ** 2 + u[1] ** 2, 2)}}=${tex(nu)}` },
+        { tex: `\\|\\mathbf v\\|=\\sqrt{(${tex(u[0], 1)})^2+(${tex(u[1], 1)})^2}=\\sqrt{${tex(u[0] ** 2 + u[1] ** 2, 2)}}=${tex(nu)}` },
         uh ? { tex: `\\hat{\\mathbf v}=\\tfrac{1}{${tex(nu)}}(${tex(u[0], 1)},${tex(u[1], 1)})=(${tex(uh[0])},${tex(uh[1])})` } : { tex: "\\mathbf v=\\mathbf 0\\Rightarrow\\hat{\\mathbf v}\\text{ undefined}" },
       ];
       break;
@@ -251,11 +251,12 @@ export default function Vector2D({ mode: initial = "dot", lab = false }: { mode?
         { label: "\\langle\\mathbf u,\\mathbf v\\rangle_W", tex: true, value: valid ? fmt(ipW(u, v)) : "W not positive definite", color: valid && Math.abs(ipW(u, v)) < 0.05 ? C.green : C.fg },
         { label: "\\mathbf u\\cdot\\mathbf v", tex: true, value: fmt(dot(u, v)) },
         { label: "\\|\\mathbf u\\|_W", tex: true, value: valid ? fmt(nuW) : "—" },
-        { label: "\theta_W", tex: true, value: Number.isFinite(cosW) ? `${fmt((Math.acos(Math.max(-1, Math.min(1, cosW))) * 180) / Math.PI, 2)}°` : "—" },
+        { label: "\\theta_W", tex: true, value: Number.isFinite(cosW) ? `${fmt((Math.acos(Math.max(-1, Math.min(1, cosW))) * 180) / Math.PI, 2)}°` : "—" },
       ];
       steps = [
         { tex: String.raw`\langle\mathbf u,\mathbf v\rangle_W=\mathbf u^\top W\mathbf v=` + texMatrix([[u[0], u[1]]], 1) + texMatrix(W, 2) + texMatrix([[v[0]], [v[1]]], 1) + "=" + tex(ipW(u, v)) },
-        { tex: String.raw`\det W=${tex(detW)}\ ${valid ? ">0" : "\le0"}\Rightarrow ${valid ? String.raw`\text{a valid inner product}` : String.raw`\text{not an inner product (not positive definite)}`}` },
+        // Sylvester's criterion for a symmetric 2 × 2 matrix: positive definite iff w₁₁ > 0 and det W > 0
+        { tex: String.raw`w_{11}=${tex(w11)}${w11 > 0 ? ">0" : String.raw`\le0`},\quad\det W=${tex(detW)}${detW > 0 ? ">0" : String.raw`\le0`}\ \Rightarrow\ ${valid ? String.raw`W\succ0:\ \text{a valid inner product}` : String.raw`\text{not positive definite: not an inner product}`}`, note: "Sylvester's criterion: both leading minors must be positive" },
       ];
       break;
     }

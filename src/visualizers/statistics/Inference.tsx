@@ -91,7 +91,7 @@ function ZTest({ initialView }: { initialView: "pvalue" | "errors" }) {
         { tex: tail === "two" ? `p=2\\,(1-\\Phi(|${tex(z, 2)}|))=${tex(p, 4)}` : `p=1-\\Phi(${tex(z, 2)})=${tex(p, 4)}` },
       ] : [
         { tex: `\\text{under }H_1:\\ z\\sim\\mathcal N(\\sqrt n\\,d,1)=\\mathcal N(${tex(shift, 3)},1)` },
-        { tex: `\\text{power}=P(|z|>z_{\\alpha/2}\\mid H_1)=${tex(power, 4)}` },
+        { tex: tail === "two" ? `\\text{power}=P(|z|>z_{\\alpha/2}\\mid H_1)=1-\\Phi(z_{\\alpha/2}-\\sqrt n\\,d)+\\Phi(-z_{\\alpha/2}-\\sqrt n\\,d)=${tex(power, 4)}` : `\\text{power}=P(z>z_{\\alpha}\\mid H_1)=1-\\Phi(z_{\\alpha}-\\sqrt n\\,d)=${tex(power, 4)}` },
       ]} />}
       note={view === "pvalue" ? "A p-value is P(data at least this extreme | H₀) — not the probability that H₀ is true. A tiny effect can be 'significant' with huge n: statistical significance is not practical significance." : "Power rises with effect size, sample size and α. Lowering α reduces false positives but increases false negatives."}
     />

@@ -1,6 +1,6 @@
 # ML Visual Lab — Project Status
 
-_Last updated: 2026-11-07_
+_Last updated: 2026-11-14_
 
 ## Run it
 
@@ -22,24 +22,35 @@ No backend, no API keys, no network calls at runtime. Progress is stored in `loc
 | | Count |
 |---|---|
 | Modules | 13 |
-| Topics in curriculum | 312 |
-| **Interactive lessons (complete)** | **312** |
+| Topics in curriculum | 371 |
+| **Interactive lessons (complete)** | **371** |
 | Placeholder lessons ("not built yet") | **0** |
-| Topics with verified Python + Rust code | **312 / 312** |
-| Visualizer components (registered ids) | 134 |
+| Topics with verified Python code | **371 / 371** |
+| ...of which also verified in Rust | 312 (the 59 lessons added in 2.0 are Python only) |
+| Visualizer components (registered ids) | 161 |
 | Visual Playground labs | 16 / 16 |
-| Statically generated pages | 350 |
+| Statically generated pages | 409 |
 
 A topic counts as **complete** only if it has: definition + motivation, KaTeX formulas with explanations, a working interactive visualization with controls, live calculations, a worked example, AI/ML applications, related-topic links, and Python + Rust code. `tests/curriculum.test.ts` enforces the structure, plus: every cross-reference resolves, every visualizer id is registered, and every formula renders in KaTeX without error.
+
+## Version 2.0 — curriculum integration and visualization audit (2026-11-14)
+
+- **IITM MLT inside Linear Algebra.** The Linear Algebra module now has three parts: *Foundations* (the original 47 lessons, unchanged), *IITM MLT — Weeks 1 to 12* (52 lessons, one section per week, in course order) and *Additional Mathematics* (4 lessons). There is no separate course, route or navigation item. Every week section carries a syllabus map (91 syllabus lines → lesson); `tests/curriculum.test.ts` fails if a line is unmapped or a week lesson lacks intuition, variable definitions, a worked example, limits or code.
+- **Lesson format.** `TopicContent` gained `intuition`, `derivation` (numbered steps with remarks) and `notation`. Week lessons use the notes' d × n data-matrix convention and say so on the page.
+- **New visualizers** (`src/visualizers/mlt/`, 27 registered ids, all lazily loaded): PCA (centring, direction sweep, change of basis, choosing k), XXᵀ/XᵀX duality, feature maps and kernels, k-means (objective, Lloyd half-steps, Voronoi geometry, k-means++), MLE, mixtures and EM, linear regression (normal equations, GD/SGD, projection and likelihood views), kernel regression, ridge/LASSO/MAP geometry, cross-validation, zero-one loss and margins, decision stumps, generative models, Naive Bayes, perceptron and its mistake bound, logistic regression, hard- and soft-margin SVM (exact dual coordinate ascent in `src/lib/ml/svmOrigin.ts`), bagging/random forests, AdaBoost, surrogate losses, forward propagation; plus subspaces, subspace projection, spectral decomposition, pseudoinverse, matrix calculus, joint/marginal tables and convex sets.
+- **Mathematics gap audit.** Added: four fundamental subspaces, projection matrices, spectral theorem, pseudoinverse (Linear Algebra); matrix calculus (Calculus); joint/marginal/conditional distributions (Statistics); convex sets (Optimization). Everything else on the candidate list already had a lesson.
+- **Fixes to existing visualizers.** The labels `\theta_W` and `\dim S` were written with single backslashes and rendered as "heta_W" / italic "dimS" (Vector2D inner-product mode, Span subspace mode); the inner-product validity line claimed "det W ≤ 0" even when only w₁₁ failed (now Sylvester's criterion); the power formula in the z-test view was the two-sided one for one-sided tests; the Beta–Binomial lab printed "undefined" for the MLE/MAP before any data. The escaping test now rejects any TeX command not followed by a letter boundary, which is what let the first two through.
+- **UI.** Lesson typography (15 px / 1.7 body, ruled section headings, variable tables, left-aligned numbered display equations that scroll instead of overflowing), grouped and collapsible sidebar sections, module page with part index and per-week syllabus coverage, previous/next lesson links, breadcrumbs that link to the section.
+- **Rust.** The 59 new lessons ship Python only (`CodeExample.rust` is optional); the original 312 keep both languages.
 
 ## Lesson completion checklist (by module)
 
 | Module | Complete | Placeholders |
 |---|---|---|
-| Linear Algebra | 47 | 0 |
-| Calculus | 24 | 0 |
-| Probability & Statistics | 46 | 0 |
-| Optimization | 16 | 0 |
+| Linear Algebra | 103 (47 foundations + 52 IITM MLT week lessons + 4 additions) | 0 |
+| Calculus | 25 | 0 |
+| Probability & Statistics | 47 | 0 |
+| Optimization | 17 | 0 |
 | Data Preprocessing | 31 | 0 |
 | Feature Engineering | 9 | 0 |
 | Machine Learning | 36 | 0 |
@@ -49,7 +60,7 @@ A topic counts as **complete** only if it has: definition + motivation, KaTeX fo
 | NLP | 7 | 0 |
 | Transformers & LLMs | 11 | 0 |
 | AI Engineering | 19 | 0 |
-| **Total** | **312** | **0** |
+| **Total** | **371** | **0** |
 
 Lessons added in this round (94): vector spaces, sparse matrices, inner-product spaces; implicit differentiation, Jacobian, multivariable chain rule, total differential, double integrals, convex functions; sample spaces, axioms, conditional independence, population/sample, Bayesian estimation, χ² tests, ANOVA, multiple testing, permutation tests, partial correlation, multicollinearity; objective functions, constrained optimisation (KKT), quasi-Newton (BFGS), line search, coordinate descent; kernel PCA, truncated SVD, LDA projection, t-SNE, UMAP; aggregation, lag, domain, filter, mutual-information and wrapper (RFE) features; learning paradigms, train/val/test, regularisation, Poisson/quantile/robust regression, OvR/OvO, stacking, voting, spectral clustering, mean shift/OPTICS, LDA/QDA, Gaussian processes, isolation forest, Apriori, matrix factorisation, grid/random/Bayesian search; initialisation, batch/layer norm, dropout, early stopping, CNN architectures, transfer learning, bidirectional RNN, seq2seq, autoencoders, VAE, GAN, diffusion, U-Net; CNN feature hierarchy, R-CNN, YOLO, segmentation, ViT, CLIP-style embeddings; text preprocessing, vocabulary, word2vec, GloVe, cross-attention, beam search, fine-tuning, distillation; data validation, feature stores, pipelines, versioning, experiment tracking, evaluation gates, serving, vector DBs (IVF), hybrid search (BM25 + RRF), structured prompting, tool calling, LLM evaluation, context windows.
 

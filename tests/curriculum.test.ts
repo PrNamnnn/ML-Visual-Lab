@@ -39,6 +39,7 @@ describe("curriculum registry", () => {
     for (const t of topics.filter((x) => x.content)) {
       for (const f of t.content!.formulas) { check(t.key, f.tex); f.variables?.forEach((v) => check(t.key, v.symbol)); }
       t.content!.worked?.steps.forEach((s) => check(t.key + " (worked)", s.tex));
+      t.content!.derivation?.steps.forEach((s) => check(t.key + " (derivation)", s.tex));
       if (t.content!.worked?.result) check(t.key + " (result)", t.content!.worked.result);
     }
     expect(bad).toEqual([]);
@@ -54,6 +55,52 @@ describe("curriculum registry", () => {
       for (const k of l.topics) expect(topicByKey(k), `${l.slug} → ${k}`).toBeDefined();
     }
     expect(labs.length).toBe(16);
+  });
+});
+
+describe("IITM MLT weeks inside Linear Algebra", () => {
+  const la = modules.find((m) => m.id === "linear-algebra")!;
+  const weeks = la.sections.filter((s) => s.week !== undefined);
+  // number of syllabus lines per week in the course outline (91 in total)
+  const expected = [9, 7, 7, 7, 8, 7, 7, 7, 9, 6, 8, 9];
+
+  it("has the twelve weeks in order, all inside the Linear Algebra module", () => {
+    expect(weeks.map((s) => s.week)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    expect(weeks.every((s) => s.part === "mlt")).toBe(true);
+    expect(modules.some((m) => m.id !== "linear-algebra" && m.sections.some((s) => s.week !== undefined))).toBe(false);
+    expect(la.parts?.map((p) => p.id)).toEqual(["foundations", "mlt", "additional"]);
+    expect(la.sections.every((s) => la.parts!.some((p) => p.id === s.part))).toBe(true);
+  });
+
+  it("maps every syllabus line of every week to a lesson of that week", () => {
+    const bad: string[] = [];
+    weeks.forEach((s, i) => {
+      if (s.syllabus?.length !== expected[i]) bad.push(`week ${s.week}: ${s.syllabus?.length} syllabus lines, expected ${expected[i]}`);
+      for (const it of s.syllabus ?? []) if (!s.topics.some((t) => t.slug === it.slug)) bad.push(`week ${s.week}: "${it.item}" → ${it.slug} is not a lesson of this week`);
+      for (const t of s.topics) if (!s.syllabus?.some((it) => it.slug === t.slug)) bad.push(`week ${s.week}: lesson ${t.slug} covers no syllabus line`);
+    });
+    expect(bad).toEqual([]);
+  });
+
+  it("gives every week lesson intuition, variables, a derivation or worked example, limits, code and an existing visual", () => {
+    const bad: string[] = [];
+    for (const s of weeks) for (const t of s.topics) {
+      const c = topicByKey(`linear-algebra/${t.slug}`)!.content;
+      if (!c) { bad.push(`${t.slug}: no content`); continue; }
+      if (!c.intuition) bad.push(`${t.slug}: no intuition`);
+      if (!c.formulas.some((f) => f.variables?.length)) bad.push(`${t.slug}: no variable explanations`);
+      if (!c.derivation && !c.worked) bad.push(`${t.slug}: neither derivation nor worked example`);
+      if (!c.worked) bad.push(`${t.slug}: no worked example`);
+      if (!c.limitations?.length && !c.assumptions?.length) bad.push(`${t.slug}: no assumptions or limitations`);
+      if (!c.code?.python) bad.push(`${t.slug}: no Python implementation`);
+      if (c.applications.length < 2) bad.push(`${t.slug}: fewer than two applications`);
+    }
+    expect(bad).toEqual([]);
+  });
+
+  it("keeps the original Linear Algebra lessons", () => {
+    for (const slug of ["vectors", "dot-product", "matrix-multiplication", "determinants", "eigenvalues-eigenvectors", "svd", "least-squares"]) expect(topicByKey(`linear-algebra/${slug}`)?.status).toBe("complete");
+    expect(la.sections.filter((s) => s.part === "foundations").flatMap((s) => s.topics).length).toBe(47);
   });
 });
 

@@ -2,7 +2,7 @@
 
 **An interactive visual laboratory for the mathematics of machine learning, deep learning and modern AI engineering.**
 
-ML Visual Lab teaches 312 topics, from vectors and derivatives to diffusion models, vector databases and LLM evaluation. Every lesson pairs a short explanation with a live, manipulable visualization, step-by-step calculations and runnable Python and Rust code. It runs entirely in the browser: no backend, no accounts, no API keys.
+ML Visual Lab teaches 371 topics, from vectors and derivatives to diffusion models, vector databases and LLM evaluation. Every lesson pairs a short explanation with a live, manipulable visualization, step-by-step calculations and runnable Python and Rust code. It runs entirely in the browser: no backend, no accounts, no API keys.
 
 ![ML Visual Lab home page](docs/screenshots/home.png)
 
@@ -37,11 +37,12 @@ Every lesson also ends with verified Python and Rust implementations:
 
 ## Highlights
 
-- **312 interactive lessons across 13 modules**: every topic has a working visualization; there are no placeholder pages.
-- **134 visualizers**: draggable vectors, matrix transformations, optimizer races, decision boundaries, t-SNE/UMAP embeddings, GANs and diffusion trained live, attention maps, IVF vector search, a model-serving queue simulation, and more.
+- **371 interactive lessons across 13 modules**: every topic has a working visualization; there are no placeholder pages.
+- **The full IITM Machine Learning Techniques syllabus (Weeks 1–12)** lives inside the Linear Algebra module as 52 lessons with derivations, worked examples and dedicated visualizers.
+- **161 visualizers**: draggable vectors, matrix transformations, optimizer races, decision boundaries, t-SNE/UMAP embeddings, GANs and diffusion trained live, attention maps, IVF vector search, a model-serving queue simulation, and more.
 - **16 Visual Playground labs** for free-form experimentation.
 - **Real algorithms, not animations**: Jacobi eigen-solver, SVD, QR/LU, SMO-trained SVMs, CART, EM for Gaussian mixtures, BFGS, Gaussian-process regression, backpropagation (gradient-checked), BPE tokenization, BM25 and reciprocal rank fusion — all implemented in TypeScript in `src/lib` and `src/visualizers`.
-- **Python + Rust for every topic**: 312 standard-library-only example pairs with syntax highlighting, a copy button, expected output and an explanation. A test suite executes every snippet and checks its printed output.
+- **Verified code for every topic**: Python for all 371 lessons and Rust as well for the original 312 — standard-library-only examples with syntax highlighting, a copy button, expected output and an explanation. A test suite executes every snippet and checks its printed output.
 - **Live math**: formulas rendered with KaTeX, with intermediate values updating as you drag controls.
 - **Fast and accessible**: each visualizer is a separate lazily loaded chunk, pages are statically generated, keyboard navigation and reduced-motion preferences are respected, and the charcoal theme has a light alternative.
 - **Command palette search** (Ctrl/⌘ + K) across topics, labs and pages, with categorized results.
@@ -115,7 +116,7 @@ The build prerenders every page (topics, modules, labs and resource pages) as st
 | `npm run lint` | Run ESLint (`next/core-web-vitals` + `next/typescript`) |
 | `npm run typecheck` | Type-check with `tsc --noEmit` |
 | `npm test` | Run the unit and curriculum-integrity tests |
-| `npm run test:code` | Execute all 312 Python and Rust examples and verify their printed output |
+| `npm run test:code` | Execute all 371 Python and 312 Rust examples and verify their printed output |
 
 ## Testing and quality checks
 
@@ -136,7 +137,7 @@ src/
     controls/             sliders, selects, toggles, animation controls
     visualization/        plotting primitives, loading indicators, Plotly wrapper
     mathematics/          KaTeX rendering
-  visualizers/            134 lazily loaded visualizers, registry.tsx, ids.ts
+  visualizers/            161 lazily loaded visualizers, registry.tsx, ids.ts
   lib/                    math, statistics, ML models, neural networks, utilities
   data/
     curriculum/           one file per module (topics, formulas, applications)

@@ -41,7 +41,7 @@ function Ellipse({ mu, v, color }: { mu: [number, number]; v: [number, number]; 
   return <ellipse cx={sx(mu[0])} cy={sy(mu[1])} rx={Math.abs(sx(2 * Math.sqrt(v[0])) - sx(0))} ry={Math.abs(sy(2 * Math.sqrt(v[1])) - sy(0))} style={{ fill: "none", stroke: color, strokeWidth: 1.4, strokeDasharray: "5 3" }} />;
 }
 
-export default function Classifier({ algo: initial = "knn", lab = false, dataset = "moons" }: { algo?: Algo; lab?: boolean; dataset?: DatasetId }) {
+export default function Classifier({ algo: initial = "knn", lab = false, dataset = "moons", criterion = "gini" }: { algo?: Algo; lab?: boolean; dataset?: DatasetId; criterion?: "gini" | "entropy" }) {
   const [algo, setAlgo] = useState<Algo>(initial);
   const [ds, setDs] = useState<DatasetId>(dataset);
   const [noise, setNoise] = useState(0.2);
@@ -70,7 +70,7 @@ export default function Classifier({ algo: initial = "knn", lab = false, dataset
       }
       case "knn": return { predict: (x: number, y: number) => knnPredict(pts, x, y, k).prob, info: null };
       case "naive-bayes": { const m = gnbFit(pts); return { predict: (x: number, y: number) => gnbPredict(m, x, y), info: m }; }
-      case "tree": { const t = buildTree(pts, depth, 1); return { predict: (x: number, y: number) => treePredict(t, x, y), info: t }; }
+      case "tree": { const t = buildTree(pts, depth, 1, criterion); return { predict: (x: number, y: number) => treePredict(t, x, y), info: t }; }
       case "forest": { const f = buildForest(pts, nTrees, depth, 3); return { predict: (x: number, y: number) => f.reduce((s, t) => s + (treePredict(t.tree, x, y) >= 0.5 ? 1 : 0), 0) / f.length, info: f }; }
       case "svm": {
         const m = svmFit(pts, C_, kernel === "linear" ? { type: "linear" } : kernel === "rbf" ? { type: "rbf", gamma } : { type: "poly", degree: 3, coef0: 1 });
@@ -78,7 +78,7 @@ export default function Classifier({ algo: initial = "knn", lab = false, dataset
       }
       case "adaboost": { const a = adaboost(pts, rounds); return { predict: (x: number, y: number) => sigmoid(2 * a.score(x, y)), info: a }; }
     }
-  }, [algo, pts, k, depth, nTrees, C_, kernel, gamma, rounds, lr, l2]);
+  }, [algo, pts, k, depth, nTrees, C_, kernel, gamma, rounds, lr, l2, criterion]);
 
   const acc = pts.filter((p) => (model.predict(p.x, p.y) >= 0.5 ? 1 : 0) === p.label).length / pts.length;
   const svm = algo === "svm" ? (model.info as ReturnType<typeof svmFit>) : null;
@@ -87,13 +87,13 @@ export default function Classifier({ algo: initial = "knn", lab = false, dataset
   const nbInfo = algo === "naive-bayes" ? (model.info as ReturnType<typeof gnbFit>) : null;
   const q = query ? knnPredict(pts, query[0], query[1], k) : null;
 
-  const deps = [algo, pts, k, depth, nTrees, C_, kernel, gamma, rounds, lr, l2, showProb, th.blue[0]];
+  const deps = [algo, pts, k, depth, nTrees, C_, kernel, gamma, rounds, lr, l2, showProb, criterion, th.blue[0], th.panel[0]];
   const steps: { tex: string; note?: string }[] = [];
   switch (algo) {
     case "logistic": { const st = model.info as { w: number[]; b: number; history: { loss: number }[] }; steps.push({ tex: `P(y=1\\mid\\mathbf x)=\\sigma(${tex(st.w[0])}x_1+${tex(st.w[1])}x_2+${tex(st.b)})` }, { tex: `\\text{log-loss after 400 GD steps}=${tex(st.history[st.history.length - 1].loss, 4)}` }); break; }
     case "knn": steps.push({ tex: `\\hat P(y=1\\mid\\mathbf x)=\\tfrac1k\\sum_{i\\in N_k(\\mathbf x)}y_i,\\quad k=${k}` }); if (q) steps.push({ tex: `\\text{query: }${q.neighbors.filter((nb) => pts[nb.i].label === 1).length}/${k}\\text{ neighbours in class 1}\\Rightarrow\\hat P=${tex(q.prob)}` }); break;
     case "naive-bayes": steps.push({ tex: "P(y\\mid x_1,x_2)\\propto P(y)\\,\\mathcal N(x_1;\\mu_{y1},\\sigma^2_{y1})\\,\\mathcal N(x_2;\\mu_{y2},\\sigma^2_{y2})", note: "features assumed independent given the class" }); break;
-    case "tree": { const t = model.info as TreeNode; steps.push({ tex: `\\text{Gini}(p)=2p(1-p);\\ \\text{split maximises }\\Delta G=G(\\text{parent})-\\sum\\tfrac{n_c}{n}G(c)`, note: `depth ${treeDepth(t)}, ${treeLeaves(t)} leaves` }); if (!t.leaf) steps.push({ tex: `\\text{root split: }x_{${t.feature + 1}}\\le${tex(t.threshold)},\\ \\Delta G=${tex(t.gain, 4)}` }); break; }
+    case "tree": { const t = model.info as TreeNode; steps.push({ tex: criterion === "entropy" ? String.raw`H(p)=-p\log_2p-(1-p)\log_2(1-p);\ \text{split maximises }IG=H(\text{parent})-\sum\tfrac{n_c}{n}H(c)` : `\\text{Gini}(p)=2p(1-p);\\ \\text{split maximises }\\Delta G=G(\\text{parent})-\\sum\\tfrac{n_c}{n}G(c)`, note: `depth ${treeDepth(t)}, ${treeLeaves(t)} leaves` }); if (!t.leaf) steps.push({ tex: `\\text{root split: }x_{${t.feature + 1}}\\le${tex(t.threshold)},\\ ${criterion === "entropy" ? "IG" : "\\Delta G"}=${tex(t.gain, 4)}` }); break; }
     case "forest": steps.push({ tex: `\\hat y=\\text{majority vote of }${nTrees}\\text{ trees, each on a bootstrap sample with random feature per split}` }); break;
     case "svm": steps.push({ tex: `\\min_{\\mathbf w,b}\\tfrac12\\|\\mathbf w\\|^2+C\\sum_i\\xi_i\\ \\text{s.t.}\\ y_i(\\mathbf w^\\top\\phi(\\mathbf x_i)+b)\\ge1-\\xi_i,\\quad C=${tex(C_)}` }, { tex: `f(\\mathbf x)=\\sum_i\\alpha_iy_iK(\\mathbf x_i,\\mathbf x)+b,\\ \\ ${nSV}\\text{ support vectors}`, note: kernel === "rbf" ? `K = exp(−${fmt(gamma)}‖x − x′‖²)` : kernel === "poly" ? "K = (x·x′ + 1)³" : "K = x·x′" }); break;
     case "adaboost": { const a = model.info as ReturnType<typeof adaboost>; const l0 = a.learners[0]; steps.push({ tex: `F(\\mathbf x)=\\sum_{m=1}^{${rounds}}\\alpha_mh_m(\\mathbf x),\\quad\\alpha_m=\\tfrac12\\ln\\tfrac{1-\\varepsilon_m}{\\varepsilon_m}` }); if (l0) steps.push({ tex: `h_1:\\ x_{${l0.f + 1}}>${tex(l0.t)},\\ \\varepsilon_1=${tex(l0.err)},\\ \\alpha_1=${tex(l0.alpha)}` }); break; }

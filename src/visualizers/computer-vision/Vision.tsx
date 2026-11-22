@@ -125,7 +125,7 @@ export function ImageFilters({ filter: initial = "sobel" }: { filter?: "channels
       break;
     case "gradient":
       views = <><Canvas data={src} label={blurFirst ? "blurred input" : "input"} /><Canvas data={mag.map((r) => r.map((v) => Math.min(255, v / 3)))} label="gradient magnitude ‖∇I‖" /></>;
-      steps = [{ tex: `\\|\\nabla I\\|=\\sqrt{G_x^2+G_y^2}=\\sqrt{${tex(sx[pi][pj], 1)}^2+${tex(sy[pi][pj], 1)}^2}=${tex(mag[pi][pj], 1)},\\quad\\theta=\\operatorname{atan2}(G_y,G_x)=${tex((Math.atan2(sy[pi][pj], sx[pi][pj]) * 180) / Math.PI, 1)}^\\circ` }];
+      steps = [{ tex: `\\|\\nabla I\\|=\\sqrt{G_x^2+G_y^2}=\\sqrt{(${tex(sx[pi][pj], 1)})^2+(${tex(sy[pi][pj], 1)})^2}=${tex(mag[pi][pj], 1)},\\quad\\theta=\\operatorname{atan2}(G_y,G_x)=${tex((Math.atan2(sy[pi][pj], sx[pi][pj]) * 180) / Math.PI, 1)}^\\circ` }];
       break;
   }
   return (
